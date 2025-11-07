@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Impressoras - SNMP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 32px 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            color: #1976d2;
+            font-size: 2.5em;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #616161;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background-color: #1565c0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            background-color: #9e9e9e;
+            cursor: not-allowed;
+        }
+
+        select {
+            padding: 12px 16px;
+            border: 1px solid #9e9e9e;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            background: white;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            border-color: #1976d2;
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #9e9e9e;
+            border-radius: 4px;
+            font-size: 1em;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            border-color: #1976d2;
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #9e9e9e;
+            border-top: 4px solid #1976d2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .stat-number.online {
+            color: #388e3c;
+        }
+
+        .stat-number.offline {
+            color: #d32f2f;
+        }
+
+        .stat-number.total {
+            color: #1976d2;
+        }
+
+        .stat-label {
+            color: #616161;
+            font-size: 0.9em;
+        }
+
+        .printers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .printer-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .printer-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .printer-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #1976d2;
+        }
+
+        .printer-card.offline::before {
+            background: #d32f2f;
+        }
+
+        .printer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .printer-ip {
+            font-size: 1.3em;
+            font-weight: 500;
+            color: #212121;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-badge.online {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .status-badge.offline {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .status-badge.checking {
+            background: #fff3cd;
+            color: #f57c00;
+        }
+
+        .printer-info {
+            margin-bottom: 12px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #616161;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #212121;
+            font-weight: 500;
+            text-align: right;
+            max-width: 60%;
+            word-wrap: break-word;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .no-results {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+            color: #757575;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .printers-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .last-updated {
+            text-align: center;
+            color: #757575;
+            margin-top: 16px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖨️ Monitor de Impressoras SNMP</h1>
+            <p class="subtitle">Monitoramento em tempo real via SNMP</p>
+        </header>
+
+        <div class="controls">
+            <button class="btn" id="refreshBtn" onclick="loadPrinters()">
+                🔄 Atualizar Dados
+            </button>
+            
+            <select id="sectorFilter" onchange="filterBySector()">
+                <option value="all">Todos os Setores</option>
+            </select>
+
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchBox" 
+                    placeholder="🔍 Buscar por IP, modelo ou serial..." 
+                    oninput="filterPrinters()"
+                >
+            </div>
+        </div>
+
+        <div id="statsContainer"></div>
+
+        <div id="errorContainer"></div>
+
+        <div id="loadingContainer" class="loading" style="display: none;">
+            <p>Carregando informações das impressoras...</p>
+        </div>
+
+        <div id="printersContainer"></div>
+
+        <div class="last-updated" id="lastUpdated"></div>
+    </div>
+
+    <script>
+        let printersData = [];
+        let filteredData = [];
+
+        // Carregar impressoras ao iniciar a página
+        window.onload = function() {
+            loadSectors();
+            loadPrinters();
+        };
+
+        // Carregar lista de setores
+        async function loadSectors() {
+            try {
+                const response = await fetch('/api/sectors');
+                const sectors = await response.json();
+                
+                const sectorFilter = document.getElementById('sectorFilter');
+                sectors.forEach(sector => {
+                    const option = document.createElement('option');
+                    option.value = sector;
+                    option.textContent = sector;
+                    sectorFilter.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar setores:', error);
+            }
+        }
+
+        // Carregar dados das impressoras
+        async function loadPrinters() {
+            const loadingContainer = document.getElementById('loadingContainer');
+            const printersContainer = document.getElementById('printersContainer');
+            const errorContainer = document.getElementById('errorContainer');
+            const refreshBtn = document.getElementById('refreshBtn');
+
+            loadingContainer.style.display = 'block';
+            printersContainer.innerHTML = '';
+            errorContainer.innerHTML = '';
+            refreshBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/printers');
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar dados das impressoras');
+                }
+
+                printersData = await response.json();
+                filteredData = printersData;
+                
+                displayStats();
+                displayPrinters(filteredData);
+                updateLastUpdated();
+
+            } catch (error) {
+                errorContainer.innerHTML = `
+                    <div class="error-message">
+                        ❌ Erro ao carregar dados: ${error.message}
+                    </div>
+                `;
+            } finally {
+                loadingContainer.style.display = 'none';
+                refreshBtn.disabled = false;
+            }
+        }
+
+        // Exibir estatísticas
+        function displayStats() {
+            const online = printersData.filter(p => p.status === 'online').length;
+            const offline = printersData.filter(p => p.status === 'offline').length;
+            const total = printersData.length;
+
+            const statsContainer = document.getElementById('statsContainer');
+            statsContainer.innerHTML = `
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number total">${total}</div>
+                        <div class="stat-label">Total de Impressoras</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number online">${online}</div>
+                        <div class="stat-label">Online</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number offline">${offline}</div>
+                        <div class="stat-label">Offline</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Exibir impressoras
+        function displayPrinters(printers) {
+            const printersContainer = document.getElementById('printersContainer');
+
+            if (printers.length === 0) {
+                printersContainer.innerHTML = `
+                    <div class="no-results">
+                        Nenhuma impressora encontrada com os filtros aplicados.
+                    </div>
+                `;
+                return;
+            }
+
+            printersContainer.innerHTML = `
+                <div class="printers-grid">
+                    ${printers.map(printer => createPrinterCard(printer)).join('')}
+                </div>
+            `;
+        }
+
+        // Criar card de impressora
+        function createPrinterCard(printer) {
+            const statusClass = printer.status || 'checking';
+            
+            return `
+                <div class="printer-card ${statusClass}">
+                    <div class="printer-header">
+                        <div class="printer-ip">${printer.ip_address}</div>
+                        <div class="status-badge ${statusClass}">${statusClass}</div>
+                    </div>
+                    <div class="printer-info">
+                        <div class="info-row">
+                            <span class="info-label">Setor:</span>
+                            <span class="info-value">${printer.sector || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Modelo:</span>
+                            <span class="info-value">${truncateText(printer.printer_model || 'N/A', 40)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Número de Série:</span>
+                            <span class="info-value">${printer.serial_number || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Total de Páginas:</span>
+                            <span class="info-value">${formatNumber(printer.total_page_count) || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Status do Dispositivo:</span>
+                            <span class="info-value">${getDeviceStatusText(printer.device_status)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Filtrar por setor
+        function filterBySector() {
+            const sector = document.getElementById('sectorFilter').value;
+            
+            if (sector === 'all') {
+                filteredData = printersData;
+            } else {
+                filteredData = printersData.filter(p => p.sector === sector);
+            }
+
+            filterPrinters();
+        }
+
+        // Filtrar impressoras pela busca
+        function filterPrinters() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            
+            let filtered = filteredData;
+
+            if (searchTerm) {
+                filtered = filteredData.filter(printer => {
+                    return (
+                        printer.ip_address.toLowerCase().includes(searchTerm) ||
+                        (printer.printer_model && printer.printer_model.toLowerCase().includes(searchTerm)) ||
+                        (printer.serial_number && printer.serial_number.toLowerCase().includes(searchTerm)) ||
+                        (printer.sector && printer.sector.toLowerCase().includes(searchTerm))
+                    );
+                });
+            }
+
+            displayPrinters(filtered);
+        }
+
+        // Funções auxiliares
+        function truncateText(text, maxLength) {
+            if (!text) return 'N/A';
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+
+        function formatNumber(num) {
+            if (!num || isNaN(num)) return 'N/A';
+            return parseInt(num).toLocaleString('pt-BR');
+        }
+
+        function getDeviceStatusText(status) {
+            if (!status) return 'N/A';
+            
+            const statusMap = {
+                '3': 'Idle (Ocioso)',
+                '4': 'Printing (Imprimindo)',
+                '5': 'Warmup (Aquecendo)',
+                'Error': 'Erro'
+            };
+
+            return statusMap[status] || status;
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            const formatted = now.toLocaleString('pt-BR');
+            document.getElementById('lastUpdated').textContent = `Última atualização: ${formatted}`;
+        }
+    </script>
+</body>
+</html>

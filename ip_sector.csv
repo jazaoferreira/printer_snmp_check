@@ -1,29 +1,3 @@
 IP,Sector
-10.1.1.12,Tesouraria
-10.1.1.17,RH
-10.1.1.129,Protocolo
-10.1.1.139,Diego Fazenda
-10.1.1.142,Fiscalizacao
-10.1.1.196,Juridico
-10.1.10.142,Contabilidade
-10.1.17.124,Fran
-10.1.17.180,Fiscalizacao
-10.1.18.190,Cadastro
-10.1.19.110,Divida Ativa
-10.1.23.106,Cadastro Imobiliario
-172.16.0.133,Abrigo
-192.168.0.201,Controle Interno
-192.168.16.46,Escola Thereza
-192.168.25.29,Sec. Desenvolvimento
-192.168.25.177,SINE
-192.168.31.11,Meio Ambiente
-192.168.31.12,PAD
-192.168.31.13,Patrimonio
-192.168.31.170,Ana Altiva
-192.168.32.42,CRAS Coordenacao
-192.168.33.20,Sec. Saúde - Paulo
-192.168.33.21,Vigilancia Sanitaria
-192.168.33.23,Farmacia 2
-192.168.33.25,Transporte Saude
-192.168.35.20,Posto 4
-10.1.1.159,Gabinete
+172.16.5.1,TI
+172.16.5.2,Teste
