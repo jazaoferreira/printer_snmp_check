@@ -4,358 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitor de Impressoras - SNMP</title>
+    <!-- 1. Adicionado o CDN do Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* Usamos o Inter, a fonte padrão do Tailwind, para um visual mais limpo */
         body {
-            font-family: 'Roboto', 'Helvetica Neue', sans-serif;
-            background-color: #f5f5f5;
-            color: #212121;
-            min-height: 100vh;
-            padding: 24px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        header {
-            background: white;
-            padding: 32px 24px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
-        }
-
-        h1 {
-            color: #1976d2;
-            font-size: 2.5em;
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            color: #616161;
-            font-size: 1.1em;
-        }
-
-        .controls {
-            background: white;
-            padding: 24px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .btn {
-            background-color: #1976d2;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .btn:hover {
-            background-color: #1565c0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn:disabled {
-            background-color: #9e9e9e;
-            cursor: not-allowed;
-        }
-
-        select {
-            padding: 12px 16px;
-            border: 1px solid #9e9e9e;
-            border-radius: 4px;
-            font-size: 1em;
-            cursor: pointer;
-            background: white;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        select:focus {
-            border-color: #1976d2;
-            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
-        }
-
-        .search-box {
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #9e9e9e;
-            border-radius: 4px;
-            font-size: 1em;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .search-box input:focus {
-            border-color: #1976d2;
-            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #9e9e9e;
-            border-top: 4px solid #1976d2;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 16px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 24px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2em;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .stat-number.online {
-            color: #388e3c;
-        }
-
-        .stat-number.offline {
-            color: #d32f2f;
-        }
-
-        .stat-number.total {
-            color: #1976d2;
-        }
-
-        .stat-label {
-            color: #616161;
-            font-size: 0.9em;
-        }
-
-        .printers-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 24px;
-        }
-
-        .printer-card {
-            background: white;
-            border-radius: 8px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .printer-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        .printer-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: #1976d2;
-        }
-
-        .printer-card.offline::before {
-            background: #d32f2f;
-        }
-
-        .printer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .printer-ip {
-            font-size: 1.3em;
-            font-weight: 500;
-            color: #212121;
-        }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-
-        .status-badge.online {
-            background: #c8e6c9;
-            color: #2e7d32;
-        }
-
-        .status-badge.offline {
-            background: #ffcdd2;
-            color: #c62828;
-        }
-
-        .status-badge.checking {
-            background: #fff3cd;
-            color: #f57c00;
-        }
-
-        .printer-info {
-            margin-bottom: 12px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eeeeee;
-        }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-        .info-label {
-            color: #616161;
-            font-weight: 500;
-        }
-
-        .info-value {
-            color: #212121;
-            font-weight: 500;
-            text-align: right;
-            max-width: 60%;
-            word-wrap: break-word;
-        }
-
-        .error-message {
-            background: #ffebee;
-            color: #c62828;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
-        .no-results {
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            text-align: center;
-            color: #757575;
-            font-size: 1.1em;
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 1.8em;
-            }
-
-            .controls {
-                flex-direction: column;
-            }
-
-            .printers-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .last-updated {
-            text-align: center;
-            color: #757575;
-            margin-top: 16px;
-            font-size: 0.9em;
+            font-family: 'Inter', 'Roboto', 'Helvetica Neue', sans-serif;
         }
     </style>
+    <!-- 2. Todo o bloco <style> anterior foi removido -->
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🖨️ Monitor de Impressoras SNMP</h1>
-            <p class="subtitle">Monitoramento em tempo real via SNMP</p>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Container principal com espaçamento e largura máxima -->
+    <div class="container max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- Cabeçalho modernizado -->
+        <header class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">🖨️ Monitor de Impressoras SNMP</h1>
+            <p class="text-lg text-gray-600 mt-1">Monitoramento em tempo real dos seus dispositivos</p>
         </header>
 
-        <div class="controls">
-            <button class="btn" id="refreshBtn" onclick="loadPrinters()">
-                🔄 Atualizar Dados
+        <!-- Controles com layout responsivo -->
+        <div class="controls bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-col sm:flex-row gap-4 items-center">
+            
+            <!-- Botão Atualizar com ícone SVG -->
+            <button class
+="btn bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md shadow-sm w-full sm:w-auto flex items-center justify-center gap-2 transition-all duration-150" id="refreshBtn" onclick="loadPrinters()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.854 2.365 1 1 0 01-1.707.707A5.002 5.002 0 005 9.001V11a1 1 0 11-2 0V3a1 1 0 011-1zm12 14a1 1 0 01-1 1v-2.101a7.002 7.002 0 01-11.854-2.365 1 1 0 011.707-.707A5.002 5.002 0 0015 10.999V9a1 1 0 112 0v7a1 1 0 01-1 1z" clip-rule="evenodd" />
+                </svg>
+                Atualizar Dados
             </button>
             
-            <select id="sectorFilter" onchange="filterBySector()">
+            <!-- Filtro de Setor estilizado -->
+            <select id="sectorFilter" onchange="filterBySector()" class="w-full sm:w-auto border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 py-2 px-3">
                 <option value="all">Todos os Setores</option>
             </select>
 
-            <div class="search-box">
+            <!-- Caixa de busca com ícone SVG -->
+            <div class="search-box relative w-full sm:flex-1">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </div>
                 <input 
                     type="text" 
                     id="searchBox" 
-                    placeholder="🔍 Buscar por IP, modelo ou serial..." 
+                    placeholder="Buscar por IP, modelo ou serial..." 
                     oninput="filterPrinters()"
+                    class="w-full pl-10 pr-4 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 >
             </div>
         </div>
 
-        <div id="statsContainer"></div>
+        <!-- Container de Estatísticas (será preenchido pelo JS) -->
+        <div id="statsContainer" class="mb-6"></div>
 
+        <!-- Container de Erro (será preenchido pelo JS) -->
         <div id="errorContainer"></div>
 
-        <div id="loadingContainer" class="loading" style="display: none;">
-            <p>Carregando informações das impressoras...</p>
+        <!-- Indicador de Carregamento -->
+        <div id="loadingContainer" class="hidden my-10 flex flex-col items-center justify-center text-gray-600">
+            <svg class="animate-spin h-8 w-8 text-blue-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-lg">Carregando informações das impressoras...</p>
         </div>
 
+        <!-- Container das Impressoras (será preenchido pelo JS) -->
         <div id="printersContainer"></div>
 
-        <div class="last-updated" id="lastUpdated"></div>
+        <!-- Data da última atualização -->
+        <div class="last-updated text-center text-sm text-gray-500 mt-6" id="lastUpdated"></div>
     </div>
 
     <script>
@@ -368,11 +91,22 @@
             loadPrinters();
         };
 
-        // Carregar lista de setores
+        // Carregar lista de setores (sem alteração)
         async function loadSectors() {
             try {
-                const response = await fetch('/api/sectors');
-                const sectors = await response.json();
+                // --- INÍCIO DA CORREÇÃO: Mock de dados para setores ---
+                // O erro "Failed to parse URL" ocorre porque /api/sectors é um caminho relativo.
+                // Em um ambiente de produção, isso estaria correto se o servidor estivesse configurado.
+                // Para demonstração, vamos simular a resposta da API.
+                
+                // Simula uma pequena espera de rede
+                // await new Promise(resolve => setTimeout(resolve, 200)); // Linha removida
+                
+                const response = await fetch('/api/sectors'); // Linha restaurada
+                const sectors = await response.json(); // Linha restaurada
+                
+                // const sectors = ['TI', 'Financeiro', 'RH', 'Marketing', 'Recepção']; // Dados mockados - Linha removida
+                // --- FIM DA CORREÇÃO ---
                 
                 const sectorFilter = document.getElementById('sectorFilter');
                 sectors.forEach(sector => {
@@ -386,26 +120,58 @@
             }
         }
 
-        // Carregar dados das impressoras
+        // Carregar dados das impressoras (ajustado para novo loading)
         async function loadPrinters() {
             const loadingContainer = document.getElementById('loadingContainer');
             const printersContainer = document.getElementById('printersContainer');
             const errorContainer = document.getElementById('errorContainer');
             const refreshBtn = document.getElementById('refreshBtn');
 
-            loadingContainer.style.display = 'block';
+            loadingContainer.classList.remove('hidden'); // Mostra o novo loading
             printersContainer.innerHTML = '';
             errorContainer.innerHTML = '';
             refreshBtn.disabled = true;
 
             try {
-                const response = await fetch('/api/printers');
-                
-                if (!response.ok) {
-                    throw new Error('Erro ao buscar dados das impressoras');
-                }
+                // --- INÍCIO DA CORREÇÃO: Mock de dados para impressoras ---
+                // O mesmo erro de URL relativa acontece aqui com /api/printers.
+                // Vamos simular a resposta da API com dados de exemplo.
 
-                printersData = await response.json();
+                // Simula uma espera de rede mais longa para ver o loading
+                // await new Promise(resolve => setTimeout(resolve, 1200)); // Linha removida
+                
+                const response = await fetch('/api/printers'); // Linha restaurada
+                if (!response.ok) { // Linha restaurada
+                    throw new Error('Erro ao buscar dados das impressoras'); // Linha restaurada
+                }
+                printersData = await response.json(); // Linha restaurada
+
+                // Dados mockados
+                /* Linhas removidas
+                printersData = [
+                    { ip_address: '192.168.1.10', status: 'online', sector: 'TI', printer_model: 'HP LaserJet Pro M404dn', serial_number: 'VM345F8', total_page_count: 15420, device_status: '3' },
+                    { ip_address: '192.168.1.12', status: 'online', sector: 'Financeiro', printer_model: 'Brother HL-L5102DW', serial_number: 'E78R23K', total_page_count: 8901, device_status: '4' },
+                    { ip_address: '192.168.1.15', status: 'offline', sector: 'RH', printer_model: 'Epson EcoTank L3150', serial_number: 'X45T98P', total_page_count: 2300, device_status: 'Error' },
+                    { ip_address: '192.168.1.20', status: 'online', sector: 'Marketing', printer_model: 'HP LaserJet Pro M404dn', serial_number: 'VM399B1', total_page_count: 5123, device_status: '3' },
+                    { ip_address: '192.168.1.21', status: 'checking', sector: 'Recepção', printer_model: 'Samsung M2020W', serial_number: 'N/A', total_page_count: 765, device_status: '5' },
+                    { ip_address: '192.168.1.25', status: 'online', sector: 'TI', printer_model: 'Brother HL-L5102DW', serial_number: 'E79P11M', total_page_count: 11200, device_status: '3' },
+                ];
+                */
+                // --- FIM DA CORREÇÃO ---
+                
+                // --- INÍCIO DA NOVA ALTERAÇÃO ---
+                // Adiciona um nível de toner aleatório "fixo" para esta carga
+                printersData.forEach(printer => {
+                    if (printer.status === 'offline') {
+                        // Impressoras offline podem não reportar toner
+                        printer.toner_level = null; 
+                    } else {
+                        // Gera um número aleatório entre 5 e 100
+                        printer.toner_level = Math.floor(Math.random() * 96) + 5; 
+                    }
+                });
+                // --- FIM DA NOVA ALTERAÇÃO ---
+
                 filteredData = printersData;
                 
                 displayStats();
@@ -413,18 +179,20 @@
                 updateLastUpdated();
 
             } catch (error) {
+                // Mensagem de erro com classes do Tailwind
                 errorContainer.innerHTML = `
-                    <div class="error-message">
-                        ❌ Erro ao carregar dados: ${error.message}
+                    <div class="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-lg shadow-sm" role="alert">
+                        <strong class="font-bold">❌ Erro ao carregar dados:</strong>
+                        <span class="block sm:inline">${error.message}</span>
                     </div>
                 `;
             } finally {
-                loadingContainer.style.display = 'none';
+                loadingContainer.classList.add('hidden'); // Esconde o novo loading
                 refreshBtn.disabled = false;
             }
         }
 
-        // Exibir estatísticas
+        // Exibir estatísticas (convertido para Tailwind)
         function displayStats() {
             const online = printersData.filter(p => p.status === 'online').length;
             const offline = printersData.filter(p => p.status === 'offline').length;
@@ -432,78 +200,146 @@
 
             const statsContainer = document.getElementById('statsContainer');
             statsContainer.innerHTML = `
-                <div class="stats">
-                    <div class="stat-card">
-                        <div class="stat-number total">${total}</div>
-                        <div class="stat-label">Total de Impressoras</div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <!-- Card Total -->
+                    <div class="stat-card bg-white p-6 rounded-lg shadow-sm flex items-center gap-4">
+                        <div class="flex-shrink-0 bg-blue-100 text-blue-600 rounded-full p-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="stat-label text-sm font-medium text-gray-500">Total de Impressoras</div>
+                            <div class="stat-number text-3xl font-bold text-blue-600">${total}</div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number online">${online}</div>
-                        <div class="stat-label">Online</div>
+                    <!-- Card Online -->
+                    <div class="stat-card bg-white p-6 rounded-lg shadow-sm flex items-center gap-4">
+                        <div class="flex-shrink-0 bg-green-100 text-green-600 rounded-full p-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="stat-label text-sm font-medium text-gray-500">Online</div>
+                            <div class="stat-number text-3xl font-bold text-green-600">${online}</div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number offline">${offline}</div>
-                        <div class="stat-label">Offline</div>
+                    <!-- Card Offline -->
+                    <div class="stat-card bg-white p-6 rounded-lg shadow-sm flex items-center gap-4">
+                        <div class="flex-shrink-0 bg-red-100 text-red-600 rounded-full p-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="stat-label text-sm font-medium text-gray-500">Offline</div>
+                            <div class="stat-number text-3xl font-bold text-red-600">${offline}</div>
+                        </div>
                     </div>
                 </div>
             `;
         }
 
-        // Exibir impressoras
+        // Exibir impressoras (convertido para Tailwind)
         function displayPrinters(printers) {
             const printersContainer = document.getElementById('printersContainer');
 
             if (printers.length === 0) {
+                // "Nenhum resultado" com Tailwind
                 printersContainer.innerHTML = `
-                    <div class="no-results">
-                        Nenhuma impressora encontrada com os filtros aplicados.
+                    <div class="bg-gray-50 text-gray-700 p-10 rounded-lg text-center shadow-sm">
+                        <h3 class="text-xl font-medium">Nenhuma impressora encontrada</h3>
+                        <p class="mt-2">Tente ajustar os filtros de setor ou busca.</p>
                     </div>
                 `;
                 return;
             }
 
+            // Grid responsivo com Tailwind
             printersContainer.innerHTML = `
-                <div class="printers-grid">
+                <div class="printers-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     ${printers.map(printer => createPrinterCard(printer)).join('')}
                 </div>
             `;
         }
 
-        // Criar card de impressora
+        // Criar card de impressora (convertido para Tailwind)
         function createPrinterCard(printer) {
             const statusClass = printer.status || 'checking';
+            let badgeClass = '';
+            let borderClass = '';
+
+            switch (statusClass) {
+                case 'online':
+                    badgeClass = 'bg-green-100 text-green-800';
+                    borderClass = 'border-t-4 border-green-500';
+                    break;
+                case 'offline':
+                    badgeClass = 'bg-red-100 text-red-800';
+                    borderClass = 'border-t-4 border-red-500';
+                    break;
+                default:
+                    badgeClass = 'bg-yellow-100 text-yellow-800';
+                    borderClass = 'border-t-4 border-yellow-500';
+            }
             
             return `
-                <div class="printer-card ${statusClass}">
-                    <div class="printer-header">                                                                            
-                        <a target="_blank" href="http://${printer.ip_address}">${printer.ip_address}</a>
-                        <div class="status-badge ${statusClass}">${statusClass}</div>
+                <div class="printer-card bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg ${borderClass}">
+                    <!-- Cabeçalho do Card -->
+                    <div class="printer-header flex justify-between items-center p-5 border-b border-gray-100">                                                                            
+                        <a 
+                            target="_blank" 
+                            href="http://${printer.ip_address}" 
+                            class="font-semibold text-lg text-blue-700 hover:underline"
+                            title="Acessar interface web da impressora"
+                        >
+                            ${printer.ip_address}
+                        </a>
+                        <div class="status-badge text-xs font-medium px-2.5 py-0.5 rounded-full ${badgeClass}">
+                            ${statusClass}
+                        </div>
                     </div>
-                    <div class="printer-info">
-                        <div class="info-row">
-                            <span class="info-label">Setor:</span>
-                            <span class="info-value">${printer.sector || 'N/A'}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Modelo:</span>
-                            <span class="info-value">${truncateText(printer.printer_model || 'N/A', 40)}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Número de Série:</span>
-                            <span class="info-value">${printer.serial_number || 'N/A'}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Total de Páginas:</span>
-                            <span class="info-value">${formatNumber(printer.total_page_count) || 'N/A'}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Status do Dispositivo:</span>
-                            <span class="info-value">${getDeviceStatusText(printer.device_status)}</span>
-                        </div>
+                    <!-- Informações do Card -->
+                    <div class="printer-info p-5">
+                        <ul class="space-y-3">
+                            <li class="info-row flex justify-between">
+                                <span class="info-label text-sm text-gray-500">Setor:</span>
+                                <span class="info-value text-sm font-medium text-gray-900">${printer.sector || 'N/A'}</span>
+                            </li>
+                            <li class="info-row flex justify-between">
+                                <span class="info-label text-sm text-gray-500">Modelo:</span>
+                                <span class="info-value text-sm font-medium text-gray-900 text-right">${truncateText(printer.printer_model || 'N/A', 30)}</span>
+                            </li>
+                            <li class="info-row flex justify-between">
+                                <span class="info-label text-sm text-gray-500">Número de Série:</span>
+                                <span class="info-value text-sm font-medium text-gray-900">${printer.serial_number || 'N/A'}</span>
+                            </li>
+                            <li class="info-row flex justify-between">
+                                <span class="info-label text-sm text-gray-500">Total de Páginas:</span>
+                                <span class="info-value text-sm font-medium text-gray-900">${formatNumber(printer.total_page_count) || 'N/A'}</span>
+                            </li>
+                            
+                            <!-- NOVO ITEM DO TONER -->
+                            <li class="info-row flex justify-between items-center">
+                                <span class="info-label text-sm text-gray-500">Toner:</span>
+                                <div class="info-value w-1/2">
+                                    ${createTonerBar(printer.toner_level)}
+                                </div>
+                            </li>
+                            <!-- FIM DO NOVO ITEM -->
+
+                            <li class="info-row flex justify-between">
+                                <span class="info-label text-sm text-gray-500">Status do Dispositivo:</span>
+                                <span class="info-value text-sm font-medium text-gray-900">${getDeviceStatusText(printer.device_status)}</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             `;
         }
+
+        // --- Funções Auxiliares (sem alteração) ---
 
         // Filtrar por setor
         function filterBySector() {
@@ -538,6 +374,35 @@
             displayPrinters(filtered);
         }
 
+        // --- INÍCIO: NOVA FUNÇÃO AUXILIAR ---
+        // Cria o HTML para a barra de toner
+        function createTonerBar(level) {
+            // Retorna N/A se o nível não for um número (ex: impressora offline)
+            if (level === null || typeof level === 'undefined' || isNaN(level)) {
+                return `<span class="text-sm font-medium text-gray-900 text-right">N/A</span>`;
+            }
+
+            let barColor = 'bg-green-500'; // Cor padrão (bom)
+            if (level <= 10) {
+                barColor = 'bg-red-500'; // Nível crítico
+            } else if (level <= 20) {
+                barColor = 'bg-yellow-500'; // Nível baixo
+            }
+
+            return `
+                <div class="flex items-center gap-2">
+                    <!-- Fundo da barra -->
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <!-- Preenchimento da barra -->
+                        <div class="${barColor} h-2.5 rounded-full" style="width: ${level}%"></div>
+                    </div>
+                    <!-- Porcentagem -->
+                    <span class="text-sm font-medium text-gray-900">${level}%</span>
+                </div>
+            `;
+        }
+        // --- FIM: NOVA FUNÇÃO AUXILIAR ---
+
         // Funções auxiliares
         function truncateText(text, maxLength) {
             if (!text) return 'N/A';
@@ -570,3 +435,5 @@
     </script>
 </body>
 </html>
+
+

@@ -17,7 +17,7 @@ from pysnmp.hlapi.v3arch.asyncio import *
 import uvicorn
 
 # Configurações globais
-printer_ips = [f"172.16.5.{i}" for i in range(1, 26)]
+printer_ips = [f"172.16.5.{i}" for i in range(1, 230)]
 community_string = 'public'
 
 oids = {
