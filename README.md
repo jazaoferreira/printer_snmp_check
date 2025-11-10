@@ -140,7 +140,7 @@ GET /api/printers/sector/TI
 No arquivo `backend.py`, modifique a lista:
 
 ```python
-printer_ips = [f"172.16.5.{i}" for i in range(1, 26)]
+printer_ips = [f"172.16.5.{i}" for i in range(1, 220)]
 ```
 
 ### Alterar community string SNMP

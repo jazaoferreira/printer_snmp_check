@@ -12,10 +12,10 @@ import csv
 from pysnmp.hlapi.v3arch.asyncio import *
 
 printer_ips = []  # Cria uma lista vazia
-for i in range(1, 26):
+for i in range(1, 230):
     ip = f"172.16.5.{i}"
     printer_ips.append(ip)
-    
+
 community_string = 'public'
 
 oids = {
